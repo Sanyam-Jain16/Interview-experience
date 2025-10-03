@@ -1,0 +1,57 @@
+function LRUCache(length) {
+  this.lruCacheData = {};
+  this.length = length;
+}
+
+LRUCache.prototype.leastRecentlyUpdate = function (key) {
+  if (this.lruCacheData[key]) {
+    this.lruCacheData[key].id = Date.now();
+  }
+};
+
+LRUCache.prototype.getSize = function () {
+  return Object.keys(this.lruCacheData).length;
+};
+
+LRUCache.prototype.sortKeys = function () {
+  return Object.entries(this.lruCacheData).sort(([, a], [, b]) => a.id - b.id);
+};
+
+LRUCache.prototype.setData = function (key, value) {
+  if (this.lruCacheData[key]) {
+    // Update existing
+    this.leastRecentlyUpdate(key);
+    this.lruCacheData[key].data = value;
+    return;
+  }
+
+  if (this.getSize() >= this.length) {
+    // Evict oldest
+    const oldestKey = this.sortKeys()[0][0];
+    delete this.lruCacheData[oldestKey];
+  }
+
+  // Insert new
+  this.lruCacheData[key] = { data: value, id: Date.now() };
+};
+
+LRUCache.prototype.getData = function (key) {
+  if (!this.lruCacheData[key]) return null;
+  this.leastRecentlyUpdate(key);
+  return this.lruCacheData[key];
+};
+
+LRUCache.prototype.getFirstItem = function () {
+  const sorted = this.sortKeys();
+  return sorted.length ? sorted[0][1] : null;
+};
+
+// -------------------------
+const cacheObj = new LRUCache(3);
+cacheObj.setData("1", "A");
+cacheObj.setData("2", "B");
+cacheObj.setData("3", "C");
+cacheObj.setData("4", "D"); // will evict "1"
+console.log(cacheObj.lruCacheData);
+console.log("Get 2:", cacheObj.getData("2").data);
+console.log("First Item (oldest):", cacheObj.getFirstItem());
